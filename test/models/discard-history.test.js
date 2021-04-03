@@ -2,11 +2,7 @@ import DiscardHistory from '../../lib/models/discard-history';
 import Repository from '../../lib/models/repository';
 import path from 'path';
 import fs from 'fs-extra';
-import {
-  cloneRepository, setUpLocalAndRemoteRepositories, getHeadCommitOnRemote,
-  assertDeepPropertyVals, assertEqualSortedArraysByKey, FAKE_USER, wireUpObserver, expectEvents,
-} from '../helpers';
-import { formatWithOptions } from 'util';
+import {cloneRepository} from '../helpers';
 
 describe('DiscardHistory', () => {
   describe('restoreLastDiscardInTempFiles', () => {
@@ -20,12 +16,11 @@ describe('DiscardHistory', () => {
       // Create 2 files with same name
       fs.mkdirSync(path.join(workdir, 'sub1'));
       fs.mkdirSync(path.join(workdir, 'sub2'));
-      const file1 = path.join(workdir, 'sub1', 'a.txt')
+      const file1 = path.join(workdir, 'sub1', 'a.txt');
       const file2 = path.join(workdir, 'sub2', 'a.txt');
       fs.writeFileSync(file1, 'foo1\n', {encoding: 'utf8'});
       fs.writeFileSync(file2, 'foo2\n', {encoding: 'utf8'});
 
-      console.log('New file created');
       await repository.updateDiscardHistory();
       const isSafe = function() { return true; };
       const unstagedChanges = await repository.getUnstagedChanges();
@@ -40,12 +35,14 @@ describe('DiscardHistory', () => {
       const results = await repository.restoreLastDiscardInTempFiles(isSafe, null);
 
       // Check results
-      results.map((merge_result, i) => {
-        const {filePath, resultPath, conflict} = merge_result;
-        if(path.dirname(filePath).endsWith('1'))
+      results.map((mergeResult, i) => {
+        const {filePath, resultPath} = mergeResult;
+        if (path.dirname(filePath).endsWith('1')) {
           assert.equal(fs.readFileSync(resultPath, 'utf8'), 'foo1\n');
-        else
+        } else {
           assert.equal(fs.readFileSync(resultPath, 'utf8'), 'foo2\n');
+        }
+        return true;
       });
     });
 
